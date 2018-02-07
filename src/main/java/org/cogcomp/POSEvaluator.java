@@ -47,6 +47,7 @@ public class POSEvaluator {
                     POSTags.add(pairGroup[0]);
                     Tokens.add(pairGroup[1]);
                 }
+                assert (POSTags.size() == Tokens.size());
                 ret.add(new Pair<>(POSTags, Tokens));
                 if (POSTags.size() != Tokens.size()){
                     exit(-1);
@@ -100,7 +101,8 @@ public class POSEvaluator {
         Map<String, Integer> predictMap = new HashMap<>();
         Map<String, Integer> correctMap = new HashMap<>();
         Properties props = new Properties();
-        props.put("annotators", "tokenize, ssplit, pos");
+        props.put("annotators", "pos");
+        props.put("enforceRequirements", "false");
         StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
         for (Pair<List<String>, List<String>> sent : sentences){
             String[] tokensArr = new String[sent.getSecond().size()];
@@ -232,8 +234,8 @@ public class POSEvaluator {
     }
 
     public static void main(String[] args){
-        cogcompNLP();
+        //cogcompNLP();
         CoreNLP();
-        OpenNLP_maxent();
+        //OpenNLP_maxent();
     }
 }
