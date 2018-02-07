@@ -10,6 +10,9 @@ from textblob._text import find_tags
 
 TestData = "../data/00-23.br"
 
+#The TextBlob Model Path
+MODULE = "../TextBlobModels/"
+
 def readData():
 	data_stream = open(TestData, "r")
 	raw = data_stream.readlines()
@@ -86,8 +89,6 @@ class Parser(_Parser):
 		if kwargs.get("tagset") == UNIVERSAL:
 			kwargs.setdefault("map", lambda token, tag: penntreebank2universal(token, tag))
 		return _Parser.find_tags(self, tokens, **kwargs)
-
-MODULE = "../TextBlobModels/"
 
 lexicon = Lexicon(
 	path = MODULE + "en-lexicon.txt",

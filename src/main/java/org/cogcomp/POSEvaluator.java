@@ -60,7 +60,7 @@ public class POSEvaluator {
         return ret;
     }
 
-    public static void cogcompNLP(){
+    public static void CogcompNLP(){
         List<Pair<List<String>, List<String>>> sentences = readData(TestFile);
         POSAnnotator posAnnotator = new POSAnnotator();
         Map<String, Integer> goldMap = new HashMap<>();
@@ -234,8 +234,8 @@ public class POSEvaluator {
     }
 
     public static void main(String[] args){
-        //cogcompNLP();
+        CogcompNLP();
         CoreNLP();
-        //OpenNLP_maxent();
+        OpenNLP_maxent();
     }
 }
