@@ -3,7 +3,6 @@ package org.cogcomp;
 import edu.illinois.cs.cogcomp.annotation.BasicTextAnnotationBuilder;
 import edu.illinois.cs.cogcomp.core.datastructures.Pair;
 import edu.illinois.cs.cogcomp.core.datastructures.ViewNames;
-import edu.illinois.cs.cogcomp.core.datastructures.textannotation.Constituent;
 import edu.illinois.cs.cogcomp.core.datastructures.textannotation.TextAnnotation;
 import edu.illinois.cs.cogcomp.core.datastructures.textannotation.View;
 import edu.illinois.cs.cogcomp.pos.POSAnnotator;
@@ -14,16 +13,15 @@ import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.ArrayCoreMap;
 import edu.stanford.nlp.util.CoreMap;
+import opennlp.tools.postag.POSModel;
+import opennlp.tools.postag.POSTaggerME;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.lang.System.exit;
-import static java.lang.System.in;
 
 /**
  * Created by xuany on 2/5/2018.
@@ -145,6 +143,41 @@ public class POSEvaluator {
         }
     }
 
+    public static void OpenNLP_maxent(){
+        List<Pair<List<String>, List<String>>> sentences = readData(TestFile);
+        Map<String, Integer> goldMap = new HashMap<>();
+        Map<String, Integer> predictMap = new HashMap<>();
+        Map<String, Integer> correctMap = new HashMap<>();
+        POSModel posModel = null;
+        POSTaggerME tagger = null;
+        try {
+            InputStream posModelIn = new FileInputStream("OpenNLPModels/en-pos-maxent.bin");
+            posModel = new POSModel(posModelIn);
+            tagger = new POSTaggerME(posModel);
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        for (Pair<List<String>, List<String>> sent : sentences){
+            String[] tokensArr = new String[sent.getSecond().size()];
+            tokensArr = sent.getSecond().toArray(tokensArr);
+            String[] tags = tagger.tag(tokensArr);
+            for (int i = 0; i < tags.length; i++){
+                String goldTag = sent.getFirst().get(i);
+                String predictedTag = tags[i];
+                incrementMap(goldMap, goldTag);
+                incrementMap(predictMap, predictedTag);
+                if (goldTag.equals(predictedTag)){
+                    incrementMap(correctMap, goldTag);
+                }
+            }
+        }
+        Map<String, Pair<Double, Double>> result = producePerformence(goldMap, predictMap, correctMap);
+        for (String key : result.keySet()){
+            System.out.println(key + ": " + result.get(key).getFirst() + ", " + result.get(key).getSecond());
+        }
+    }
+
     public static void incrementMap(Map<String, Integer> target, String key){
         if (target.containsKey(key)){
             target.put(key, target.get(key) + 1);
@@ -172,6 +205,8 @@ public class POSEvaluator {
     }
 
     public static void main(String[] args){
+        cogcompNLP();
         CoreNLP();
+        OpenNLP_maxent();
     }
 }
