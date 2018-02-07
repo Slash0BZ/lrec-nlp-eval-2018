@@ -8,7 +8,7 @@ from spacy.pipeline import Tagger
 from textblob._text import (Parser as _Parser, Lexicon, WORD, POS, CHUNK, PNP, PENN, UNIVERSAL, Spelling)
 from textblob._text import find_tags
 
-TestData = "../data/wsj-00"
+TestData = "../data/00-23.br"
 
 def readData():
 	data_stream = open(TestData, "r")
@@ -39,13 +39,17 @@ def NLTK():
 		for i in range (0, len(posTags)):
 			goldTag = posTags[i]
 			predictTag = tagged[i][1]
+			if (predictTag == "("):
+				predictTag = "-LRB-"
+			if (predictTag == ")"):
+				predictTag = "-RRB-"
 			incrementMap(predictMap, predictTag)
 			incrementMap(goldMap, goldTag)
 			if (goldTag == predictTag):
 				incrementMap(correctMap, goldTag)
-	performence = producePerformence(goldMap, predictMap, correctMap)
-	for label in performence:
-		print label + ": " + str(performence[label])
+	performance = producePerformance(goldMap, predictMap, correctMap)
+	print "==========NLTK POS PERFORMANCE=========="
+	printPerformance(performance)
 
 def Spacy():
 	data = readData()
@@ -69,9 +73,9 @@ def Spacy():
 				incrementMap(goldMap, goldTag)
 				if (goldTag == predictTag):
 					incrementMap(correctMap, goldTag)
-	performence = producePerformence(goldMap, predictMap, correctMap)
-	for label in performence:
-		print label + ": " + str(performence[label])
+	performance = producePerformance(goldMap, predictMap, correctMap)
+	print "==========Spacy POS PERFORMANCE=========="
+	printPerformance(performance)
 
 class Parser(_Parser):    
 	def find_lemmata(self, tokens, **kwargs):
@@ -98,7 +102,7 @@ parser = Parser(
 	language = "en"
 )
 
-def TextBlob_PatterTagger():
+def TextBlob_PatternTagger():
 	data = readData()
 	predictMap = {}
 	goldMap = {}
@@ -110,13 +114,17 @@ def TextBlob_PatterTagger():
 		for i in range (0, len(outputs)):
 			goldTag = posTags[i]
 			predictTag = outputs[i][1].encode('utf-8')
+			if (predictTag == "("):
+				predictTag = "-LRB-"
+			if (predictTag == ")"):
+				predictTag = "-RRB-"
 			incrementMap(predictMap, predictTag)
 			incrementMap(goldMap, goldTag)
 			if (goldTag == predictTag):
 				incrementMap(correctMap, goldTag)
-	performence = producePerformence(goldMap, predictMap, correctMap)
-	for label in performence:
-		print label + ": " + str(performence[label])
+	performance = producePerformance(goldMap, predictMap, correctMap)
+	print "==========TextBlob Pattern POS PERFORMANCE=========="
+	printPerformance(performance)
 			
 def incrementMap(m, k):
 	if k in m:
@@ -124,9 +132,11 @@ def incrementMap(m, k):
 	else:
 		m[k] = 1
 
-def producePerformence(gMap, pMap, cMap):
+def producePerformance(gMap, pMap, cMap):
 	labelSet = Set()
 	ret = {}
+	totalLabeled = 0
+	totalCorrect = 0
 	for gKey in gMap:
 		labelSet.add(gKey)
 	for pKey in pMap:
@@ -148,5 +158,33 @@ def producePerformence(gMap, pMap, cMap):
 		if (labeled != 0):
 			recall = float(correct) / float(labeled)
 		ret[label] = (precision, recall)
+		totalLabeled += labeled
+		totalCorrect += correct
+	accuracy = float(totalCorrect) / float(totalLabeled)
+	ret["ACC"] = (accuracy, accuracy)
 	return ret
+
+def printPerformance(resultMap):
+	labelList = resultMap.keys()
+	labelList.sort()
+	accF1 = 0.0
+	for label in labelList:
+		precision = resultMap[label][0]
+		recall = resultMap[label][1]
+		f1 = 0.0
+		if (precision * recall != 0):
+			f1 = 2 * precision * recall / (precision + recall)
+		accF1 += f1
+		pStr = str(round(precision * 100.0, 2))
+		rStr = str(round(recall * 100.0, 2))
+		fStr = str(round(f1 * 100.0, 2))
+		print label + "\t" + pStr + "\t" + rStr + "\t" + fStr
+	print "Average F1\t" + str(round(100.0 * accF1 / float(len(labelList)), 2))
+	print "Accuracy\t" + str(round(100.0 * resultMap["ACC"][0], 2))
 			
+def runTests():
+	NLTK()
+	Spacy()
+	TextBlob_PatternTagger()
+
+runTests()

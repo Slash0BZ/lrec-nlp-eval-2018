@@ -17,6 +17,7 @@ import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSTaggerME;
 
 import java.io.*;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,7 +29,7 @@ import static java.lang.System.exit;
  */
 public class POSEvaluator {
 
-    public static final String TestFile = "data/wsj-00";
+    public static final String TestFile = "data/00-23.br";
 
     public static List<Pair<List<String>, List<String>>> readData(String filename){
         List<Pair<List<String>, List<String>>> ret = new ArrayList<>();
@@ -88,10 +89,9 @@ public class POSEvaluator {
                 }
             }
         }
-        Map<String, Pair<Double, Double>> result = producePerformence(goldMap, predictMap, correctMap);
-        for (String key : result.keySet()){
-            System.out.println(key + ": " + result.get(key).getFirst() + ", " + result.get(key).getSecond());
-        }
+        Map<String, Pair<Double, Double>> result = producePerformance(goldMap, predictMap, correctMap);
+        System.out.println("==========CogcompNLP POS PERFORMANCE==========");
+        printPerformance(result);
     }
 
     public static void CoreNLP(){
@@ -137,10 +137,9 @@ public class POSEvaluator {
                 }
             }
         }
-        Map<String, Pair<Double, Double>> result = producePerformence(goldMap, predictMap, correctMap);
-        for (String key : result.keySet()){
-            System.out.println(key + ": " + result.get(key).getFirst() + ", " + result.get(key).getSecond());
-        }
+        Map<String, Pair<Double, Double>> result = producePerformance(goldMap, predictMap, correctMap);
+        System.out.println("==========CoreNLP POS PERFORMANCE==========");
+        printPerformance(result);
     }
 
     public static void OpenNLP_maxent(){
@@ -172,10 +171,9 @@ public class POSEvaluator {
                 }
             }
         }
-        Map<String, Pair<Double, Double>> result = producePerformence(goldMap, predictMap, correctMap);
-        for (String key : result.keySet()){
-            System.out.println(key + ": " + result.get(key).getFirst() + ", " + result.get(key).getSecond());
-        }
+        Map<String, Pair<Double, Double>> result = producePerformance(goldMap, predictMap, correctMap);
+        System.out.println("==========OpenNLP Maxent POS PERFORMANCE==========");
+        printPerformance(result);
     }
 
     public static void incrementMap(Map<String, Integer> target, String key){
@@ -187,21 +185,50 @@ public class POSEvaluator {
         }
     }
 
-    public static Map<String, Pair<Double, Double>> producePerformence(Map<String, Integer> goldMap, Map<String, Integer> predictMap, Map<String, Integer> correctMap){
+    public static Map<String, Pair<Double, Double>> producePerformance(Map<String, Integer> goldMap, Map<String, Integer> predictMap, Map<String, Integer> correctMap){
         Set<String> labelSet = new HashSet<>(goldMap.keySet());
         Set<String> labelSetPredict = new HashSet<>(predictMap.keySet());
         labelSet.addAll(labelSetPredict);
-
+        int totalLabeled = 0;
+        int totalcorrect = 0;
         Map<String, Pair<Double, Double>> ret = new HashMap<>();
+        DecimalFormat df = new DecimalFormat("#.##");
         for (String label : labelSet){
             int predict = predictMap.containsKey(label) ? predictMap.get(label) : 0;
             int labeled = goldMap.containsKey(label) ? goldMap.get(label) : 0;
+            totalLabeled += labeled;
             int correct = correctMap.containsKey(label) ? correctMap.get(label) : 0;
-            double precision = (double)correct / (double) predict;
-            double recall = (double)correct / (double)labeled;
+            totalcorrect += correct;
+            double precision = predict > 0 ? (double)correct / (double) predict : 0.0;
+            double recall = labeled > 0 ? (double)correct / (double)labeled : 0.0;
+            precision = Double.valueOf(df.format(precision * 100.0));
+            recall = Double.valueOf(df.format(recall * 100.0));
             ret.put(label, new Pair<>(precision, recall));
         }
+        double acc = (double)totalcorrect / (double)totalLabeled;
+        acc = Double.valueOf(df.format(acc * 100.0));
+        ret.put("ACC", new Pair<>(acc, acc));
         return ret;
+    }
+
+    public static void printPerformance(Map<String, Pair<Double, Double>> rMap){
+        List<String> labelList = new ArrayList<>(rMap.keySet());
+        Collections.sort(labelList);
+        Double accuF1 = 0.0;
+        DecimalFormat df = new DecimalFormat("#.##");
+        for (String label : labelList){
+            double precision = rMap.get(label).getFirst();
+            double recall = rMap.get(label).getSecond();
+            double f1 = 0.0;
+            if (precision * recall != 0.0){
+                f1 = 2 * precision * recall / (precision + recall);
+            }
+            f1 = Double.valueOf(df.format(f1));
+            System.out.println(label + "\t" + precision + "\t" + recall + "\t" + f1);
+            accuF1 += f1;
+        }
+        System.out.println("Average F1\t" + df.format(accuF1 / (double)labelList.size()));
+        System.out.println("Accuracy\t" + rMap.get("ACC").getFirst());
     }
 
     public static void main(String[] args){
