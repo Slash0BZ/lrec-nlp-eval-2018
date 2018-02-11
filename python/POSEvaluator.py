@@ -8,13 +8,13 @@ from spacy.pipeline import Tagger
 from textblob._text import (Parser as _Parser, Lexicon, WORD, POS, CHUNK, PNP, PENN, UNIVERSAL, Spelling)
 from textblob._text import find_tags
 
-TestData = "../data/00-23.br"
+TestData = "../data/22-24.br"
 
 #The TextBlob Model Path
 MODULE = "../TextBlobModels/"
 
-def readData():
-	data_stream = open(TestData, "r")
+def readData(dataPath):
+	data_stream = open(dataPath, "r")
 	raw = data_stream.readlines()
 	raw = [x.strip() for x in raw]
 	ret = list()
@@ -31,7 +31,7 @@ def readData():
 	return ret
 		
 def NLTK():
-	data = readData()
+	data = readData(TestData)
 	predictMap = {}
 	goldMap = {}
 	correctMap = {}
@@ -55,7 +55,7 @@ def NLTK():
 	printPerformance(performance)
 
 def Spacy():
-	data = readData()
+	data = readData(TestData)
 	predictMap = {}
 	goldMap = {}
 	correctMap = {}
@@ -64,6 +64,34 @@ def Spacy():
 	for sentence in data:
 		posTags = sentence[0]
 		tokens = [x.decode('utf-8') for x in sentence[1]]	
+		doc = Doc(nlp.vocab, words=tokens)
+		for name, proc in nlp.pipeline:
+			if (name != "tagger"):
+				print name
+				continue
+			doc = proc(doc)
+			for i in range(0, len(doc)):
+				predictTag = doc[i].tag_
+				goldTag = posTags[i]
+				incrementMap(predictMap, predictTag)
+				incrementMap(goldMap, goldTag)
+				if (goldTag == predictTag):
+					incrementMap(correctMap, goldTag)
+	performance = producePerformance(goldMap, predictMap, correctMap)
+	print "==========Spacy POS PERFORMANCE=========="
+	printPerformance(performance)
+
+def Spacy_Newmodel():
+	data = readData(TestData)
+	predictMap = {}
+	goldMap = {}
+	correctMap = {}
+	output_dir = Path("SpacyModels")
+	nlp = spacy.load(output_dir)
+	tagger = Tagger(nlp.vocab)
+	for sentence in data:
+		posTags = sentence[0]
+		tokens = [x.decode('utf-8') for x in sentence[1]]
 		doc = Doc(nlp.vocab, words=tokens)
 		for name, proc in nlp.pipeline:
 			if (name != "tagger"):
@@ -104,7 +132,7 @@ parser = Parser(
 )
 
 def TextBlob_PatternTagger():
-	data = readData()
+	data = readData(TestData)
 	predictMap = {}
 	goldMap = {}
 	correctMap = {}
@@ -186,6 +214,6 @@ def printPerformance(resultMap):
 def runTests():
 	NLTK()
 	Spacy()
+	Spacy_Newmodel()
 	TextBlob_PatternTagger()
 
-runTests()

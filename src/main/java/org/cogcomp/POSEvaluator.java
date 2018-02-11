@@ -29,7 +29,7 @@ import static java.lang.System.exit;
  */
 public class POSEvaluator {
 
-    public static final String TestFile = "data/00-23.br";
+    public static final String TestFile = "data/22-24.br";
 
     public static List<Pair<List<String>, List<String>>> readData(String filename){
         List<Pair<List<String>, List<String>>> ret = new ArrayList<>();

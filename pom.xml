@@ -16,6 +16,11 @@
         </dependency>
         <dependency>
             <groupId>edu.illinois.cs.cogcomp</groupId>
+            <artifactId>illinois-pos-models</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>edu.illinois.cs.cogcomp</groupId>
             <artifactId>illinois-nlp-pipeline</artifactId>
             <version>4.0.1</version>
         </dependency>
