@@ -9,15 +9,17 @@ files = [item for item in os.listdir(root_dir) if os.path.isfile(os.path.join(ro
 import spacy
 
 # Load English tokenizer, tagger, parser, NER and word vectors
-nlp = spacy.load('en',  disable=['parser'])
+nlp = spacy.load('en',  disable=[''])
 
 
 
 for ff in files:
     f = open(root_dir + ff, 'r')
     paragraph = f.read()
-    doc = nlp(paragraph)
-    sentences = list(doc.sents)
+    docs = nlp.pipe([paragraph.decode('utf-8')], n_threads=1)
+    for doc in docs:
+        assert doc.is_parsed
+    #sentences = list(doc.sents)
 #    [tok for tok in doc]
 #    [chunk  for chunk in doc.noun_chunks]
 #    [tok.lemma_ for tok in doc]
