@@ -72,19 +72,6 @@ public class POSAnnotator extends Annotator {
      */
     @Override
     public void initialize(ResourceManager rm) {
-        Vector<String> bcs = new Vector<>();
-        bcs.add("brown-clusters" + File.separator + "brown-english-wikitext.case-intact.txt-c1000-freq10-v3.txt");
-        bcs.add("brown-clusters" + File.separator + "brownBllipClusters");
-        bcs.add("brown-clusters" + File.separator + "brown-rcv1.clean.tokenized-CoNLL03.txt-c1000-freq1.txt");
-        Vector<Integer> bcst = new Vector<>();
-        bcst.add(5);
-        bcst.add(5);
-        bcst.add(5);
-        Vector<Boolean> bcsl = new Vector<>();
-        bcsl.add(false);
-        bcsl.add(false);
-        bcsl.add(false);
-        BrownClusters.init(bcs, bcst, bcsl, false);
         tagger = new POSTagger();
 
     }
